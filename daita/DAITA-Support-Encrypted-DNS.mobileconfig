@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ConsentText</key>
+	<dict>
+		<key>default</key>
+		<string>WHAT THIS PROFILE DOES NOT DO
+
+It does not enable, force, or verify Mullvad's DAITA (Defense against AI-guided
+Traffic Analysis). DAITA lives inside the Mullvad app and no configuration
+profile can reach it. Turn it on manually: Mullvad app &gt; Settings &gt; VPN settings
+&gt; DAITA.
+
+WHAT IT DOES
+
+Routes all DNS queries to Quad9 Secured (DNSSEC + malicious-domain blocking) over DNS-over-HTTPS, so
+name resolution is not sent in the clear to the local network or your ISP while
+the Mullvad tunnel is down. While the tunnel is up, Mullvad's in-tunnel DNS
+takes precedence and this payload does nothing.
+
+SIDE EFFECTS
+
+- Visual voicemail on Orange, T-Mobile, Videotron and EE is excluded from
+  encrypted DNS so it keeps working. Other carriers may still break voicemail
+  or captive-portal sign-in; remove the profile if so.
+- Network-level content filtering on your home or office network stops applying.
+- This is not a kill switch. If the resolver is unreachable, do not assume DNS
+  fails closed on iOS 25 and earlier.
+
+Removable at any time: Settings &gt; General &gt; VPN &amp; Device Management.
+</string>
+	</dict>
+	<key>PayloadContent</key>
+	<array>
+		<dict>
+			<key>DNSSettings</key>
+			<dict>
+				<key>AllowFailover</key>
+				<false/>
+				<key>DNSProtocol</key>
+				<string>HTTPS</string>
+				<key>ServerAddresses</key>
+				<array>
+					<string>9.9.9.9</string>
+					<string>149.112.112.112</string>
+					<string>2620:fe::fe</string>
+					<string>2620:fe::9</string>
+				</array>
+				<key>ServerURL</key>
+				<string>https://dns.quad9.net/dns-query</string>
+			</dict>
+			<key>OnDemandRules</key>
+			<array>
+				<dict>
+					<key>Action</key>
+					<string>EvaluateConnection</string>
+					<key>ActionParameters</key>
+					<array>
+						<dict>
+							<key>DomainAction</key>
+							<string>NeverConnect</string>
+							<key>Domains</key>
+							<array>
+								<string>dav.orange.fr</string>
+								<string>msg.t-mobile.com</string>
+								<string>ip.videotron.ca</string>
+								<string>vvm.ee.co.uk</string>
+							</array>
+						</dict>
+					</array>
+				</dict>
+				<dict>
+					<key>Action</key>
+					<string>Connect</string>
+				</dict>
+			</array>
+			<key>PayloadDescription</key>
+			<string>Sends all DNS queries over DNS-over-HTTPS. Does not enable DAITA.</string>
+			<key>PayloadDisplayName</key>
+			<string>Encrypted DNS — Quad9 Secured (DNSSEC + malicious-domain blocking)</string>
+			<key>PayloadIdentifier</key>
+			<string>com.github.tellebo.ios-configuration-profiles.daita-support.dns</string>
+			<key>PayloadType</key>
+			<string>com.apple.dnsSettings.managed</string>
+			<key>PayloadUUID</key>
+			<string>C13E47B6-7EC8-58BB-8721-58D8C419E3BE</string>
+			<key>PayloadVersion</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>PayloadDescription</key>
+	<string>Encrypted DNS for a Mullvad DAITA setup. DAITA itself must be enabled in the Mullvad app; no configuration profile can set it.</string>
+	<key>PayloadDisplayName</key>
+	<string>DAITA Support — Encrypted DNS (does NOT enable DAITA)</string>
+	<key>PayloadIdentifier</key>
+	<string>com.github.tellebo.ios-configuration-profiles.daita-support</string>
+	<key>PayloadOrganization</key>
+	<string>tellebo/iOS-Configuration-Profiles</string>
+	<key>PayloadRemovalDisallowed</key>
+	<false/>
+	<key>PayloadScope</key>
+	<string>System</string>
+	<key>PayloadType</key>
+	<string>Configuration</string>
+	<key>PayloadUUID</key>
+	<string>37524BFB-1D55-5A36-8868-28F84D12FD0C</string>
+	<key>PayloadVersion</key>
+	<integer>1</integer>
+</dict>
+</plist>

@@ -1,0 +1,26 @@
+[package]
+name = "tad-engine"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+description = "Traffic-Analysis Defense engine: a profile-enforceable Maybenot integration for a mobile VPN packet tunnel"
+
+[lib]
+# rlib for the tests, staticlib for linking into an iOS Network Extension,
+# cdylib for host-side experimentation.
+crate-type = ["rlib", "staticlib", "cdylib"]
+
+[dependencies]
+maybenot = "2.2"
+maybenot-machines = "1.0"
+rand = "0.9"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+# The extension runs under a hard memory cap (see ios/README notes); keep it small.
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"

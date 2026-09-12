@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ConsentText</key>
+	<dict>
+		<key>default</key>
+		<string>TRAFFIC-ANALYSIS DEFENSE — ENFORCED
+
+This profile configures the TAD VPN VPN and sets a minimum traffic-analysis defense level
+of "moderate". You can raise the level in the app. You cannot lower it while this profile
+is installed.
+
+WHAT THE DEFENSE DOES
+
+It injects cover traffic and pads packets to a constant size so that an observer watching
+the encrypted tunnel cannot infer which sites you visit from packet sizes and timing.
+
+WHAT IT COSTS
+
+Real bandwidth and battery. Cover traffic is indistinguishable from your traffic to an
+observer, which means it is also indistinguishable to your data plan. Expect materially
+higher data use, more so at "moderate" and "heavy".
+
+FAIL-CLOSED BEHAVIOUR
+
+If the server cannot run the matching server-side defense, the app refuses to connect
+rather than leave you believing you are protected when you are not.
+
+LIMITS
+
+- This enforces a floor, not the device. Removing this profile removes the floor.
+- The defense protects traffic inside this VPN tunnel. Traffic that does not go through
+  the tunnel is not protected.
+
+Removable at: Settings &gt; General &gt; VPN &amp; Device Management (unless your organisation has
+supervised this device and disallowed removal).
+</string>
+	</dict>
+	<key>PayloadContent</key>
+	<array>
+		<dict>
+			<key>OnDemandEnabled</key>
+			<integer>1</integer>
+			<key>OnDemandRules</key>
+			<array>
+				<dict>
+					<key>Action</key>
+					<string>Connect</string>
+				</dict>
+			</array>
+			<key>PayloadDescription</key>
+			<string>Configures the VPN and pins a minimum traffic-analysis defense level.</string>
+			<key>PayloadDisplayName</key>
+			<string>TAD VPN — defense floor: moderate</string>
+			<key>PayloadIdentifier</key>
+			<string>com.github.tellebo.ios-configuration-profiles.tad.vpn</string>
+			<key>PayloadType</key>
+			<string>com.apple.vpn.managed</string>
+			<key>PayloadUUID</key>
+			<string>9467D9DB-17F3-51FE-B171-6685623614E2</string>
+			<key>PayloadVersion</key>
+			<integer>1</integer>
+			<key>ProviderBundleIdentifier</key>
+			<string>com.example.tadvpn.PacketTunnel</string>
+			<key>ProviderType</key>
+			<string>packet-tunnel</string>
+			<key>UserDefinedName</key>
+			<string>TAD VPN</string>
+			<key>VPNSubType</key>
+			<string>com.example.tadvpn</string>
+			<key>VPNType</key>
+			<string>VPN</string>
+			<key>VendorConfig</key>
+			<dict>
+				<key>TADConstantPacketSize</key>
+				<true/>
+				<key>TADDefenseLevel</key>
+				<string>moderate</string>
+				<key>TADEnforced</key>
+				<true/>
+				<key>TADMaxBlockingFraction</key>
+				<string>0.2</string>
+				<key>TADMaxPaddingFraction</key>
+				<string>0.5</string>
+				<key>TADRequirePeerSupport</key>
+				<true/>
+				<key>TADServerEndpoint</key>
+				<string>vpn.example.com:51820</string>
+			</dict>
+		</dict>
+	</array>
+	<key>PayloadDescription</key>
+	<string>Pins a minimum traffic-analysis defense level for the TAD VPN app.</string>
+	<key>PayloadDisplayName</key>
+	<string>Traffic-Analysis Defense — enforced (moderate)</string>
+	<key>PayloadIdentifier</key>
+	<string>com.github.tellebo.ios-configuration-profiles.tad</string>
+	<key>PayloadOrganization</key>
+	<string>tellebo/iOS-Configuration-Profiles</string>
+	<key>PayloadRemovalDisallowed</key>
+	<false/>
+	<key>PayloadScope</key>
+	<string>System</string>
+	<key>PayloadType</key>
+	<string>Configuration</string>
+	<key>PayloadUUID</key>
+	<string>83623FA6-8056-5DB8-BB6E-3CB9E19F0AF6</string>
+	<key>PayloadVersion</key>
+	<integer>1</integer>
+</dict>
+</plist>

@@ -64,36 +64,87 @@ against website fingerprinting. Do not deploy it and tell users they are protect
 
 ## The profile
 
+One profile, three effects. After installing it: the VPN turns itself on and stays on, DNS
+goes to DNSforge hard over DoH, and traffic inside the tunnel is shaped by the defense at
+`moderate` or above.
+
 ```
 cd profile
 python3 build_profile.py \
     --bundle-id com.yourco.vpn \
     --provider-bundle-id com.yourco.vpn.PacketTunnel \
     --endpoint vpn.yourco.com:51820 \
-    --level moderate
+    --level moderate \
+    --resolver dnsforge-hard
 ```
 
-It emits a `com.apple.vpn.managed` payload with `VPNType=VPN`, `VPNSubType` set to your
-app, `ProviderType=packet-tunnel`, and the policy in `VendorConfig`. The build asserts
-`PayloadVersion == 1` throughout, that no trap key is present, that `VPNSubType` is set
-(Apple's schema requires it when `VPNType` is `VPN`), that the extension identifier sits
-under the app's, that the floor is not `off`, and that the profile does not write the
-app's own origin nonce.
+| Payload | What it does | Binds |
+|---|---|---|
+| `com.apple.vpn.managed` | VPN config, `ProviderType=packet-tunnel`, TAD policy + resolver in `VendorConfig` | iOS 4+ |
+| ⤷ `OnDemandEnabled` + `OnDemandRules` | brings the tunnel up by itself | iOS 4+ |
+| ⤷ `OnDemandUserOverrideDisabled` | greys out the Connect On Demand toggle in Settings | **iOS 14+, not supervised-only** |
+| `com.apple.dnsSettings.managed` | DoH to the same resolver, for the window before the tunnel is up | iOS 14+ |
+
+### Why the resolver is pinned twice
+
+**An active VPN overrides `com.apple.dnsSettings.managed`.** Pinning DNS only there would
+leave it inert exactly when the VPN is doing its job. So the resolver goes in two places:
+
+- **`VendorConfig`** — the extension turns `TADDNSServerURL` / `TADDNSServerAddresses`
+  into `NEDNSOverHTTPSSettings` on the tunnel's own network settings. While the VPN is up,
+  DoH runs *inside* the tunnel: encrypted end-to-end to DNSforge, and shaped by the
+  traffic-analysis defense on the way out. Your VPN server sees a DoH connection to
+  DNSforge, not the names being resolved.
+- **The DNS payload** — covers boot and reconnection, so DNS is never in the clear.
+
+`build_profile.py` **asserts the two agree**. A profile whose fallback resolver differs
+from its in-tunnel resolver is a bug, not a configuration.
+
+The build also asserts `PayloadVersion == 1` throughout, that no trap key is present, that
+`VPNSubType` is set (Apple's schema requires it when `VPNType` is `VPN`), that the
+extension identifier sits under the app's, that the floor is not `off`, that on-demand is
+enabled *and* pinned, and that the profile does not write the app's own origin nonce.
+
+### About DNSforge hard
+
+The endpoint and bootstrap addresses came from the signed `hard.dnsforge.de` profile —
+CMS signature verified against a Let's Encrypt certificate for `CN=hard.dnsforge.de` —
+not from memory.
+
+**Hard mode filters aggressively**: ads, trackers and malware across roughly 2.8 million
+domains, with no allowances made for breakage. Things will break, by design. When a site
+or an app feature stops working, suspect the resolver first. `--resolver quad9` is the
+conservative alternative (DNSSEC and malicious-domain blocking, no ad filtering).
+
+Two further notes on that source profile:
+
+- Its signing certificate expires **2026-11-02**. That does not affect an already-installed
+  profile, but a fresh install after that date shows as unverified.
+- If you were already using it standalone, **remove it** before installing this one. Two
+  `com.apple.dnsSettings.managed` payloads configuring different resolvers is an ambiguous
+  state, not a redundant one.
+
+This profile is unsigned, so iOS shows "Not Verified" on install. That is expected for a
+self-built profile; it is plain XML, so read it first.
 
 **The shipped file carries placeholder bundle identifiers** and will install and do
 nothing until you point it at your app. That is deliberate — a profile naming an app that
 does not read `providerConfiguration` is exactly the inert artifact `../daita/` was written
 to warn about.
 
-Two things the profile cannot do, both verified against Apple's schema:
+### What "automatically on" does and does not mean
 
-- **Always-On VPN is unavailable.** `VPNType=AlwaysOn` restricts `TunnelConfigurations` →
-  `ProtocolType` to a rangelist of exactly one value, `IKEv2`. No packet-tunnel provider
-  can be an iOS Always-On VPN. On-demand (`OnDemandEnabled`, which this profile sets) is
-  the closest substitute.
+- **Always-On VPN is unavailable to any packet-tunnel provider.** `VPNType=AlwaysOn`
+  restricts `TunnelConfigurations` → `ProtocolType` to a rangelist of exactly one value,
+  `IKEv2`. On Demand with `OnDemandUserOverrideDisabled` is the strongest substitute, and
+  unlike Always-On it needs no supervision.
+- **The tunnel comes up on traffic, not at boot.** On Demand connects when something tries
+  to use the network. There is a brief window at boot or after a network change before the
+  tunnel is up — which is the window the DNS payload exists to cover.
 - **It cannot survive its own removal.** On an unsupervised iPhone the owner can delete the
-  profile and the floor goes with it. Supervision can make the profile non-removable; see
-  `../daita/README.md` for the supervised-armed keys and their costs.
+  profile, and the VPN, the defense floor and the pinned DNS all go with it. Supervision
+  can make the profile non-removable; see `../daita/README.md` for the supervised-armed
+  keys and their costs.
 
 ## What to build next, in order
 

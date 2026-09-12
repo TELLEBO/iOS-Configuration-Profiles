@@ -94,7 +94,11 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
             constantPacketSize=\(engine.constantPacketSize, privacy: .public)
             """)
 
-        try await setTunnelNetworkSettings(makeNetworkSettings())
+        let dns = loader.dnsConfig(from: providerConfig)
+        if dns == nil {
+            log.notice("no resolver pinned by profile; using whatever the server hands out")
+        }
+        try await setTunnelNetworkSettings(makeNetworkSettings(dns: dns))
         startPacketLoop()
         startReceiveLoop()
     }
@@ -244,8 +248,40 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
         fatalError("supply your WireGuard/QUIC transport here")
     }
 
-    private func makeNetworkSettings() -> NEPacketTunnelNetworkSettings {
-        fatalError("supply your tunnel network settings here")
+    /// Build the tunnel's network settings, applying the pinned resolver.
+    ///
+    /// The addresses, routes and MTU are yours to supply — they depend on your transport.
+    /// The DNS part is not a stub, because it is the half that pairs with the profile.
+    private func makeNetworkSettings(dns: TadDNSConfig?) -> NEPacketTunnelNetworkSettings {
+        let settings = makeTransportNetworkSettings()
+
+        if let dns {
+            let dnsSettings: NEDNSSettings
+            if let url = dns.serverURL {
+                // DoH from inside the tunnel: the query is encrypted end-to-end to the
+                // resolver, and the tunnel carries it, so the traffic-analysis defense
+                // shapes it like any other traffic. The VPN server sees a DoH connection
+                // to the resolver, not the names being looked up.
+                let doh = NEDNSOverHTTPSSettings(servers: dns.serverAddresses)
+                doh.serverURL = url
+                dnsSettings = doh
+            } else {
+                dnsSettings = NEDNSSettings(servers: dns.serverAddresses)
+            }
+            // The empty string is the match-all domain. Apple: "If the VPN tunnel becomes
+            // the network's default route, the servers ... become the default resolver
+            // and the matchDomains list is ignored" — so this matters only for a
+            // split-route configuration, and is harmless for a full tunnel.
+            dnsSettings.matchDomains = [""]
+            settings.dnsSettings = dnsSettings
+        }
+
+        return settings
+    }
+
+    /// Addresses, routes and MTU for your transport.
+    private func makeTransportNetworkSettings() -> NEPacketTunnelNetworkSettings {
+        fatalError("supply your tunnel addresses, routes and MTU here")
     }
 }
 

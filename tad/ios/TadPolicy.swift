@@ -45,9 +45,24 @@ enum TadConfigKey {
     static let maxBlockingFraction = "TADMaxBlockingFraction"
     static let constantPacketSize = "TADConstantPacketSize"
     static let serverEndpoint = "TADServerEndpoint"
+    // DNS, applied to the tunnel's own network settings. These exist because a
+    // com.apple.dnsSettings.managed payload is overridden by an active VPN: pinning the
+    // resolver only there would leave it inert exactly while the tunnel is doing its job.
+    static let dnsProtocol = "TADDNSProtocol"
+    static let dnsServerURL = "TADDNSServerURL"
+    static let dnsServerAddresses = "TADDNSServerAddresses"
     /// Written only by this app, never by a profile. Its absence is what identifies a
     /// profile-provisioned configuration.
     static let appNonce = "TADAppInstanceNonce"
+}
+
+/// The resolver the tunnel must use while it is up.
+struct TadDNSConfig {
+    /// Resolver IPs. Used to reach the DoH endpoint without needing DNS first, which is
+    /// why the profile carries them alongside the URL.
+    let serverAddresses: [String]
+    /// nil means plain DNS to `serverAddresses`; non-nil means DNS-over-HTTPS.
+    let serverURL: URL?
 }
 
 struct TadPolicyLoader {
@@ -111,6 +126,29 @@ struct TadPolicyLoader {
             throw TadError.policyEncodingFailed
         }
         return json
+    }
+
+    /// The resolver pinned by the profile, if it pinned one.
+    ///
+    /// Returning nil means "the profile said nothing about DNS", not "use no DNS" — the
+    /// caller then falls back to whatever the VPN server hands out. A profile that pins a
+    /// resolver here and in its DNS payload covers both the tunnel-up and tunnel-down
+    /// cases; see ../profile/build_profile.py, which asserts the two agree.
+    func dnsConfig(from providerConfiguration: [String: Any]?) -> TadDNSConfig? {
+        guard let config = providerConfiguration else { return nil }
+
+        let addresses = (config[TadConfigKey.dnsServerAddresses] as? [String]) ?? []
+        guard !addresses.isEmpty else { return nil }
+
+        let isDoH = (string(config[TadConfigKey.dnsProtocol]) ?? "") == "https"
+        let url = isDoH ? (string(config[TadConfigKey.dnsServerURL]).flatMap(URL.init(string:))) : nil
+
+        // A profile that asks for HTTPS but gives no usable URL is misconfigured. Falling
+        // back to plaintext DNS silently would be the wrong repair: it would downgrade
+        // the thing the profile was installed to guarantee.
+        if isDoH && url == nil { return nil }
+
+        return TadDNSConfig(serverAddresses: addresses, serverURL: url)
     }
 
     // MARK: - Coercion

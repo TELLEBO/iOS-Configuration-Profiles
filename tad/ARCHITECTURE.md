@@ -122,6 +122,29 @@ you the inner IP packets, and padding those accomplishes nothing, because the ob
 the outer datagrams. In this design `TadTransport.constantPacketSize` owns it, and the
 engine only reports whether the policy asked for it.
 
+## Where DNS belongs
+
+DNS is the leak that most obviously defeats a traffic-analysis defense: shaping packet
+timing is pointless if the device announces each destination by name first. But pinning it
+is not one decision, it is two, because **an active VPN overrides a
+`com.apple.dnsSettings.managed` payload**.
+
+| Tunnel state | What resolves DNS | Configured by |
+|---|---|---|
+| Up | `NEDNSOverHTTPSSettings` on the tunnel's network settings | `VendorConfig` → `providerConfiguration` |
+| Down / coming up | the system-wide encrypted DNS profile | `com.apple.dnsSettings.managed` |
+
+Doing DoH from inside the tunnel is the better half of this, and not only for coverage:
+the DoH connection is itself tunnel traffic, so the defense shapes it like everything
+else, and the VPN server sees a DoH connection to the resolver rather than the names being
+looked up. Pointing the tunnel at plaintext resolver IPs instead would hand every query to
+whoever runs the egress.
+
+One Apple detail worth knowing before you debug this: `matchDomains` with an empty-string
+entry is the match-all idiom, but "if the VPN tunnel becomes the network's default route,
+the servers ... become the default resolver and the `matchDomains` list is ignored". For a
+full-tunnel VPN it is belt and braces.
+
 ## Costs, stated plainly
 
 Cover traffic is real traffic. It is indistinguishable from your traffic to an observer,

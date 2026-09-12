@@ -5,22 +5,29 @@
 	<key>ConsentText</key>
 	<dict>
 		<key>default</key>
-		<string>TRAFFIC-ANALYSIS DEFENSE — ENFORCED
+		<string>TAD VPN — VPN, TRAFFIC-ANALYSIS DEFENSE AND ENCRYPTED DNS
 
-This profile configures the TAD VPN VPN and sets a minimum traffic-analysis defense level
-of "moderate". You can raise the level in the app. You cannot lower it while this profile
-is installed.
+WHAT HAPPENS AFTER YOU INSTALL THIS
 
-WHAT THE DEFENSE DOES
+The VPN turns itself on and stays on. All DNS goes to DNSforge hard over DNS-over-HTTPS. Traffic
+inside the tunnel is shaped by a traffic-analysis defense at the "moderate" level or higher.
 
-It injects cover traffic and pads packets to a constant size so that an observer watching
-the encrypted tunnel cannot infer which sites you visit from packet sizes and timing.
+THE THREE PARTS
+
+VPN, always on. Connect On Demand is enabled and its toggle is disabled, so the tunnel
+comes back by itself.
+
+Traffic-analysis defense. Cover traffic and constant packet sizes, so an observer watching
+the encrypted tunnel cannot infer which sites you visit from packet sizes and timing. You
+can raise the level in the app. You cannot lower it while this profile is installed.
+
+Encrypted DNS. Aggressive filtering: ads, trackers and malware across roughly 2.8 million domains, with no allowances made for breakage. Expect some sites and app features to stop working.
 
 WHAT IT COSTS
 
-Real bandwidth and battery. Cover traffic is indistinguishable from your traffic to an
-observer, which means it is also indistinguishable to your data plan. Expect materially
-higher data use, more so at "moderate" and "heavy".
+Cover traffic is real traffic: expect materially higher data use and battery drain, more so
+at "moderate" and "heavy". Filtering DNS breaks things by design — if a site or an app
+stops working, the resolver is the first thing to suspect.
 
 FAIL-CLOSED BEHAVIOUR
 
@@ -29,9 +36,11 @@ rather than leave you believing you are protected when you are not.
 
 LIMITS
 
-- This enforces a floor, not the device. Removing this profile removes the floor.
-- The defense protects traffic inside this VPN tunnel. Traffic that does not go through
-  the tunnel is not protected.
+- This enforces a floor, not the device. Removing this profile removes all three parts.
+- The defense protects traffic inside the tunnel. Traffic that does not go through the
+  tunnel is not protected.
+- Encrypted DNS is not a kill switch. On iOS 25 and earlier, do not assume DNS fails
+  closed when the resolver is unreachable.
 
 Removable at: Settings &gt; General &gt; VPN &amp; Device Management (unless your organisation has
 supervised this device and disallowed removal).
@@ -49,10 +58,12 @@ supervised this device and disallowed removal).
 					<string>Connect</string>
 				</dict>
 			</array>
+			<key>OnDemandUserOverrideDisabled</key>
+			<integer>1</integer>
 			<key>PayloadDescription</key>
-			<string>Configures the VPN and pins a minimum traffic-analysis defense level.</string>
+			<string>Configures the VPN, turns it on automatically, and pins both the minimum traffic-analysis defense level and the DNS resolver used inside the tunnel.</string>
 			<key>PayloadDisplayName</key>
-			<string>TAD VPN — defense floor: moderate</string>
+			<string>TAD VPN — always on, defense floor: moderate</string>
 			<key>PayloadIdentifier</key>
 			<string>com.github.tellebo.ios-configuration-profiles.tad.vpn</string>
 			<key>PayloadType</key>
@@ -75,6 +86,17 @@ supervised this device and disallowed removal).
 			<dict>
 				<key>TADConstantPacketSize</key>
 				<true/>
+				<key>TADDNSProtocol</key>
+				<string>HTTPS</string>
+				<key>TADDNSServerAddresses</key>
+				<array>
+					<string>49.12.222.213</string>
+					<string>2a01:4f8:c17:2c61::213</string>
+					<string>88.198.122.154</string>
+					<string>2a01:4f8:c013:5ec0::154</string>
+				</array>
+				<key>TADDNSServerURL</key>
+				<string>https://hard.dnsforge.de/dns-query</string>
 				<key>TADDefenseLevel</key>
 				<string>moderate</string>
 				<key>TADEnforced</key>
@@ -89,11 +111,66 @@ supervised this device and disallowed removal).
 				<string>vpn.example.com:51820</string>
 			</dict>
 		</dict>
+		<dict>
+			<key>DNSSettings</key>
+			<dict>
+				<key>AllowFailover</key>
+				<false/>
+				<key>DNSProtocol</key>
+				<string>HTTPS</string>
+				<key>ServerAddresses</key>
+				<array>
+					<string>49.12.222.213</string>
+					<string>2a01:4f8:c17:2c61::213</string>
+					<string>88.198.122.154</string>
+					<string>2a01:4f8:c013:5ec0::154</string>
+				</array>
+				<key>ServerURL</key>
+				<string>https://hard.dnsforge.de/dns-query</string>
+			</dict>
+			<key>OnDemandRules</key>
+			<array>
+				<dict>
+					<key>Action</key>
+					<string>EvaluateConnection</string>
+					<key>ActionParameters</key>
+					<array>
+						<dict>
+							<key>DomainAction</key>
+							<string>NeverConnect</string>
+							<key>Domains</key>
+							<array>
+								<string>dav.orange.fr</string>
+								<string>msg.t-mobile.com</string>
+								<string>ip.videotron.ca</string>
+								<string>vvm.ee.co.uk</string>
+							</array>
+						</dict>
+					</array>
+				</dict>
+				<dict>
+					<key>Action</key>
+					<string>Connect</string>
+				</dict>
+			</array>
+			<key>PayloadDescription</key>
+			<string>System-wide DNS-over-HTTPS. An active VPN overrides this, so it covers the window before the tunnel is up.</string>
+			<key>PayloadDisplayName</key>
+			<string>Encrypted DNS — DNSforge hard (used while the VPN is down)</string>
+			<key>PayloadIdentifier</key>
+			<string>com.github.tellebo.ios-configuration-profiles.tad.dns</string>
+			<key>PayloadType</key>
+			<string>com.apple.dnsSettings.managed</string>
+			<key>PayloadUUID</key>
+			<string>7E4EC989-19DB-5611-A30D-1A6DFB5BE4EB</string>
+			<key>PayloadVersion</key>
+			<integer>1</integer>
+		</dict>
 	</array>
 	<key>PayloadDescription</key>
-	<string>Pins a minimum traffic-analysis defense level for the TAD VPN app.</string>
+	<string>Always-on VPN with an enforced traffic-analysis defense floor and pinned encrypted DNS.</string>
 	<key>PayloadDisplayName</key>
-	<string>Traffic-Analysis Defense — enforced (moderate)</string>
+	<string>TAD VPN — always-on VPN, moderate defense, DNSforge hard DNS</string>
 	<key>PayloadIdentifier</key>
 	<string>com.github.tellebo.ios-configuration-profiles.tad</string>
 	<key>PayloadOrganization</key>

@@ -19,4 +19,4 @@ Ground rules for anything added here:
 | Directory | What it does |
 |---|---|
 | [`daita/`](daita/) | Research on Mullvad DAITA and why no profile can enforce it, plus the encrypted-DNS profile that covers the part of that threat model which *is* profile-enforceable. |
-| [`tad/`](tad/) | DAITA's architecture rebuilt as an independent, profile-enforceable feature: a tested Maybenot integration, the iOS extension design, and a VPN payload that really does pin the defense — because the app it targets reads it. |
+| [`tad/`](tad/) | DAITA's architecture rebuilt as an independent, profile-enforceable feature: a tested Maybenot integration, the iOS extension design, and a combined always-on VPN + DNSforge profile that really does pin the defense — because the app it targets reads it. |

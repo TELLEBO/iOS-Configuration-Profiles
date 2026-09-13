@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ConsentText</key>
+	<dict>
+		<key>default</key>
+		<string>DNS FIREWALL
+
+WHAT IT DOES
+
+Every DNS query from this device is sent encrypted, over HTTPS, to a filtering resolver.
+Domains that serve ads, trackers and mobile analytics go to AdGuard DNS and are blocked.
+Everything else goes to Quad9 Secured, which blocks malware and phishing and is chosen for
+reliability rather than for how much it blocks.
+
+This works at the domain level and applies to every app, not just the browser.
+
+WHAT IT DOES NOT DO
+
+It is not a defense against traffic analysis. A configuration profile cannot pad packets,
+generate cover traffic, or delay anything — it has no code that runs. An observer can still
+see the size and timing of your traffic. Nothing installable as a profile changes that.
+
+It is also not a full firewall. It cannot block an app that connects to a raw IP address,
+and it cannot block traffic by port or protocol.
+
+SIDE EFFECTS
+
+- Some apps and sites will lose functionality. That is what blocking means.
+- If a resolver is unreachable, DNS fails rather than falling back to the network's own
+  resolver. That is deliberate: the alternative is silently handing your queries to
+  whatever DNS an unknown Wi-Fi network offers.
+- Network-level filtering you run at home stops applying.
+- Visual voicemail on Orange, T-Mobile, Videotron and EE is excluded so it keeps working.
+
+Removable at any time: Settings &gt; General &gt; VPN &amp; Device Management.
+</string>
+	</dict>
+	<key>PayloadContent</key>
+	<array>
+		<dict>
+			<key>DNSSettings</key>
+			<dict>
+				<key>AllowFailover</key>
+				<false/>
+				<key>DNSProtocol</key>
+				<string>HTTPS</string>
+				<key>ServerAddresses</key>
+				<array>
+					<string>94.140.14.14</string>
+					<string>94.140.15.15</string>
+					<string>2a10:50c0::ad1:ff</string>
+					<string>2a10:50c0::ad2:ff</string>
+				</array>
+				<key>ServerURL</key>
+				<string>https://dns.adguard-dns.com/dns-query</string>
+				<key>SupplementalMatchDomains</key>
+				<array>
+					<string>doubleclick.net</string>
+					<string>googlesyndication.com</string>
+					<string>googleadservices.com</string>
+					<string>adnxs.com</string>
+					<string>adsrvr.org</string>
+					<string>criteo.com</string>
+					<string>criteo.net</string>
+					<string>rubiconproject.com</string>
+					<string>pubmatic.com</string>
+					<string>openx.net</string>
+					<string>casalemedia.com</string>
+					<string>bidswitch.net</string>
+					<string>smartadserver.com</string>
+					<string>teads.tv</string>
+					<string>moatads.com</string>
+					<string>33across.com</string>
+					<string>taboola.com</string>
+					<string>outbrain.com</string>
+					<string>google-analytics.com</string>
+					<string>googletagmanager.com</string>
+					<string>scorecardresearch.com</string>
+					<string>quantserve.com</string>
+					<string>hotjar.com</string>
+					<string>mouseflow.com</string>
+					<string>fullstory.com</string>
+					<string>smartlook.com</string>
+					<string>crazyegg.com</string>
+					<string>appsflyer.com</string>
+					<string>adjust.com</string>
+					<string>branch.io</string>
+					<string>kochava.com</string>
+					<string>singular.net</string>
+					<string>app-measurement.com</string>
+					<string>amplitude.com</string>
+					<string>mixpanel.com</string>
+					<string>segment.io</string>
+					<string>segment.com</string>
+					<string>braze.com</string>
+					<string>clevertap.com</string>
+					<string>applovin.com</string>
+					<string>adcolony.com</string>
+					<string>vungle.com</string>
+					<string>chartboost.com</string>
+					<string>inmobi.com</string>
+					<string>supersonicads.com</string>
+					<string>connect.facebook.net</string>
+					<string>an.facebook.com</string>
+				</array>
+			</dict>
+			<key>PayloadDescription</key>
+			<string>Ads, trackers and malware. The aggressive option that still runs anycast.</string>
+			<key>PayloadDisplayName</key>
+			<string>DNS — AdGuard DNS (47 ad/tracker domains)</string>
+			<key>PayloadIdentifier</key>
+			<string>com.github.tellebo.ios-configuration-profiles.firewall.dns.aggressive</string>
+			<key>PayloadType</key>
+			<string>com.apple.dnsSettings.managed</string>
+			<key>PayloadUUID</key>
+			<string>F88ED379-6105-5AEF-96F5-BDBE54A581E3</string>
+			<key>PayloadVersion</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>DNSSettings</key>
+			<dict>
+				<key>AllowFailover</key>
+				<false/>
+				<key>DNSProtocol</key>
+				<string>HTTPS</string>
+				<key>ServerAddresses</key>
+				<array>
+					<string>9.9.9.9</string>
+					<string>149.112.112.112</string>
+					<string>2620:fe::fe</string>
+					<string>2620:fe::9</string>
+				</array>
+				<key>ServerURL</key>
+				<string>https://dns.quad9.net/dns-query</string>
+			</dict>
+			<key>OnDemandRules</key>
+			<array>
+				<dict>
+					<key>Action</key>
+					<string>EvaluateConnection</string>
+					<key>ActionParameters</key>
+					<array>
+						<dict>
+							<key>DomainAction</key>
+							<string>NeverConnect</string>
+							<key>Domains</key>
+							<array>
+								<string>dav.orange.fr</string>
+								<string>msg.t-mobile.com</string>
+								<string>ip.videotron.ca</string>
+								<string>vvm.ee.co.uk</string>
+							</array>
+						</dict>
+					</array>
+				</dict>
+				<dict>
+					<key>Action</key>
+					<string>Connect</string>
+				</dict>
+			</array>
+			<key>PayloadDescription</key>
+			<string>Malware and phishing. DNSSEC validating. No ad blocking.</string>
+			<key>PayloadDisplayName</key>
+			<string>DNS — Quad9 Secured (everything else)</string>
+			<key>PayloadIdentifier</key>
+			<string>com.github.tellebo.ios-configuration-profiles.firewall.dns.catchall</string>
+			<key>PayloadType</key>
+			<string>com.apple.dnsSettings.managed</string>
+			<key>PayloadUUID</key>
+			<string>1E4A49D7-44BB-5A6A-AE85-186BCE667CE1</string>
+			<key>PayloadVersion</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>PayloadDescription</key>
+	<string>Encrypted, filtering DNS split across two resolvers.</string>
+	<key>PayloadDisplayName</key>
+	<string>DNS Firewall — Quad9 Secured + AdGuard DNS</string>
+	<key>PayloadIdentifier</key>
+	<string>com.github.tellebo.ios-configuration-profiles.firewall</string>
+	<key>PayloadOrganization</key>
+	<string>tellebo/iOS-Configuration-Profiles</string>
+	<key>PayloadRemovalDisallowed</key>
+	<false/>
+	<key>PayloadScope</key>
+	<string>System</string>
+	<key>PayloadType</key>
+	<string>Configuration</string>
+	<key>PayloadUUID</key>
+	<string>A81D1727-663D-5464-8B32-3E60A344458B</string>
+	<key>PayloadVersion</key>
+	<integer>1</integer>
+</dict>
+</plist>

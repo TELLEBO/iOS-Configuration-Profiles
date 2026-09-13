@@ -16,4 +16,4 @@ pub use engine::{Action, Engine, EngineError};
 pub use policy::{DefenseLevel, Policy, PolicyError, PolicySource, Role};
 
 /// Re-exported so the host can build events without depending on maybenot directly.
-pub use maybenot::{Timer, TriggerEvent};
+pub use maybenot::{MachineId, Timer, TriggerEvent};

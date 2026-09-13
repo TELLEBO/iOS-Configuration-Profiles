@@ -1,0 +1,17 @@
+[package]
+name = "dvpn-node"
+description = "DAITA VPN node: runs the defense engine over the shaped transport, as client or server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "dvpn-node"
+path = "src/main.rs"
+
+[dependencies]
+dvpn-wire.workspace = true
+dvpn-transport.workspace = true
+tad-engine.workspace = true
+blake3 = "1"

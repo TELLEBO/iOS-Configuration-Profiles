@@ -2,6 +2,13 @@
 
 Assessed 2026-09-13 against the code in this directory and Mullvad's shipped DAITA.
 
+> **Update, 2026-09-13.** P0.1–P0.3 below are now built and measured in
+> [`../dvpn/`](../dvpn/): constant-size sealed datagrams (73 distinct packet sizes → 1,
+> size entropy 1.136 → 0.000 bits), both ends shaping, and capability negotiation that
+> refuses rather than degrades. The assessment below describes the state *before* that
+> work; P1 and P2 are unchanged, and the headline verdict still holds for deployment,
+> evidence and the mobile client.
+
 ## Verdict
 
 **TAD is not more powerful than DAITA. It is not currently a competing defense at all.**

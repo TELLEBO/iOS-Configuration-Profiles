@@ -1,0 +1,14 @@
+dvpn-node — DAITA VPN testbed node
+
+  serve    --listen ADDR [--level LEVEL] [--no-server-machines] [--seconds N] [--psk S] [--out DIR]
+  client   --connect ADDR [--floor LEVEL] [--level LEVEL] [--seconds N] [--psk S] [--out DIR]
+  baseline --connect ADDR [--seconds N] [--out DIR]
+
+LEVEL is one of: light, moderate, heavy.
+
+  --floor              minimum the client will accept; below it, the connection is refused
+  --no-server-machines run a server that cannot shape return traffic, to show the refusal
+  --out                directory for trace CSVs (nanoseconds,direction,bytes)
+
+TESTBED ONLY. Keys come from a pre-shared string; there is no authenticated
+key exchange. See src/main.rs.

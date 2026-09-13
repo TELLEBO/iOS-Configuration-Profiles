@@ -1,0 +1,11 @@
+[package]
+name = "dvpn-measure"
+description = "Compare a defended wire trace against an undefended baseline"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "dvpn-measure"
+path = "src/main.rs"

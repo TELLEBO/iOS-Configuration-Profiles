@@ -15,6 +15,7 @@
 //! (Noise_IK or WireGuard's handshake) from a reviewed implementation.
 
 mod levels;
+mod wgbridge;
 mod session;
 mod timers;
 mod workload;
@@ -30,6 +31,16 @@ use dvpn_wire::{FrameKind, Hello, HelloAck, MAX_PAYLOAD, NegotiationError, VERSI
 use tad_engine::{DefenseLevel, Engine, Policy, PolicySource, Role};
 
 use session::{Session, Source};
+use wgbridge::WgBridge;
+
+/// What a session carries: a synthetic workload for measurement, or real WireGuard.
+enum Carry {
+    Synthetic,
+    /// Client side: listen here for the local WireGuard.
+    WgListen(String),
+    /// Server side: forward to the real WireGuard endpoint here.
+    WgForward(SocketAddr),
+}
 
 const DEFAULT_PSK: &str = "dvpn-testbed-preshared-key";
 
@@ -49,13 +60,31 @@ fn main() -> ExitCode {
         "serve" => {
             let listen = get("--listen").unwrap_or_else(|| "127.0.0.1:5555".into());
             let level = get("--level").and_then(|s| levels::parse(&s)).unwrap_or(DefenseLevel::Moderate);
-            serve(&listen, level, has("--no-server-machines"), seconds, &psk, &out_dir)
+            serve(&listen, level, has("--no-server-machines"), seconds, &psk, &out_dir, Carry::Synthetic)
         }
         "client" => {
             let connect = get("--connect").unwrap_or_else(|| "127.0.0.1:5555".into());
             let floor = get("--floor").and_then(|s| levels::parse(&s)).unwrap_or(DefenseLevel::Moderate);
             let want = get("--level").and_then(|s| levels::parse(&s)).unwrap_or(floor);
-            client(&connect, floor, want, seconds, &psk, &out_dir)
+            client(&connect, floor, want, seconds, &psk, &out_dir, Carry::Synthetic)
+        }
+        "wg-server" => {
+            let listen = get("--listen").unwrap_or_else(|| "0.0.0.0:5601".into());
+            let level = get("--level").and_then(|s| levels::parse(&s)).unwrap_or(DefenseLevel::Moderate);
+            match get("--wg-forward")
+                .unwrap_or_else(|| "127.0.0.1:51820".into())
+                .parse::<SocketAddr>()
+            {
+                Ok(fwd) => serve(&listen, level, false, seconds, &psk, &out_dir, Carry::WgForward(fwd)),
+                Err(e) => Err(format!("--wg-forward: {e}").into()),
+            }
+        }
+        "wg-client" => {
+            let connect = get("--connect").unwrap_or_else(|| "127.0.0.1:5601".into());
+            let floor = get("--floor").and_then(|s| levels::parse(&s)).unwrap_or(DefenseLevel::Moderate);
+            let want = get("--level").and_then(|s| levels::parse(&s)).unwrap_or(floor);
+            let listen = get("--wg-listen").unwrap_or_else(|| "127.0.0.1:51820".into());
+            client(&connect, floor, want, seconds, &psk, &out_dir, Carry::WgListen(listen))
         }
         "baseline" => {
             let connect = get("--connect").unwrap_or_else(|| "127.0.0.1:5555".into());
@@ -119,6 +148,7 @@ fn serve(
     seconds: u64,
     psk: &str,
     out_dir: &PathBuf,
+    carry: Carry,
 ) -> Result<(), Err> {
     banner(psk == DEFAULT_PSK);
     let socket = UdpSocket::bind(listen)?;
@@ -208,11 +238,25 @@ fn serve(
     eprintln!("engine up: {} machines", engine.num_machines());
 
     let mut sess = Session::new(engine, endpoint);
-    let mut src = workload::Responder::new(Instant::now());
-    sess.run(&mut src, Instant::now() + Duration::from_secs(seconds))?;
+    let deadline = Instant::now() + Duration::from_secs(seconds);
 
-    report("server", &sess);
-    write_traces(out_dir, "server", &sess, &src.real)?;
+    match carry {
+        Carry::Synthetic => {
+            let mut src = workload::Responder::new(Instant::now());
+            sess.run(&mut src, deadline)?;
+            report("server", &sess);
+            write_traces(out_dir, "server", &sess, &src.real)?;
+        }
+        Carry::WgForward(target) => {
+            let mut src = WgBridge::forwarding(target)?;
+            eprintln!("forwarding decrypted traffic to WireGuard at {target}");
+            sess.run(&mut src, deadline)?;
+            report("server", &sess);
+            eprintln!("  {}", src.report());
+            write_traces(out_dir, "server", &sess, &[])?;
+        }
+        Carry::WgListen(_) => return Err("wg-listen is a client-side option".into()),
+    }
     Ok(())
 }
 
@@ -223,6 +267,7 @@ fn client(
     seconds: u64,
     psk: &str,
     out_dir: &PathBuf,
+    carry: Carry,
 ) -> Result<(), Err> {
     banner(psk == DEFAULT_PSK);
     let peer: SocketAddr = connect.parse()?;
@@ -296,11 +341,28 @@ fn client(
     );
 
     let mut sess = Session::new(engine, endpoint);
-    let mut src = workload::Browsing::new(Instant::now(), Duration::from_millis(3500));
-    sess.run(&mut src, Instant::now() + Duration::from_secs(seconds))?;
+    let deadline = Instant::now() + Duration::from_secs(seconds);
 
-    report("client", &sess);
-    write_traces(out_dir, "client", &sess, &src.real)?;
+    match carry {
+        Carry::Synthetic => {
+            let mut src = workload::Browsing::new(Instant::now(), Duration::from_millis(3500));
+            sess.run(&mut src, deadline)?;
+            report("client", &sess);
+            write_traces(out_dir, "client", &sess, &src.real)?;
+        }
+        Carry::WgListen(bind) => {
+            let mut src = WgBridge::listening(&bind)?;
+            eprintln!(
+                "WireGuard relay listening on {} — point the client's Endpoint here",
+                src.local_addr()?
+            );
+            sess.run(&mut src, deadline)?;
+            report("client", &sess);
+            eprintln!("  {}", src.report());
+            write_traces(out_dir, "client", &sess, &[])?;
+        }
+        Carry::WgForward(_) => return Err("wg-forward is a server-side option".into()),
+    }
     Ok(())
 }
 

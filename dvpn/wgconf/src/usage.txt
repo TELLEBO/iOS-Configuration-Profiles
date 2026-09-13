@@ -1,0 +1,11 @@
+dvpn-wgconf — generate a ready-to-use WireGuard setup for DAITA VPN
+
+  --server-endpoint HOST:PORT   required; where the server is reachable
+  --clients N                   number of client configs (default 1)
+  --dns base|hard|clean         DNSforge tier (default base)
+  --out DIR                     output directory (default wg/)
+  --relay-listen ADDR           local shaping relay address (default 127.0.0.1:51820)
+  --direct                      plain WireGuard, NO traffic-analysis defense
+
+Shaped mode is the default. In shaped mode the client's Endpoint is the local
+relay, not the server, and the tunnel will not come up unless the relay runs.

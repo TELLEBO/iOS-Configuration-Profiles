@@ -1,14 +1,21 @@
-dvpn-node — DAITA VPN testbed node
+dvpn-node — DAITA VPN node
 
-  serve    --listen ADDR [--level LEVEL] [--no-server-machines] [--seconds N] [--psk S] [--out DIR]
-  client   --connect ADDR [--floor LEVEL] [--level LEVEL] [--seconds N] [--psk S] [--out DIR]
-  baseline --connect ADDR [--seconds N] [--out DIR]
+Synthetic workload, for measurement:
+  serve     --listen ADDR [--level LEVEL] [--no-server-machines] [--seconds N]
+  client    --connect ADDR [--floor LEVEL] [--level LEVEL] [--seconds N]
+  baseline  --connect ADDR [--seconds N]
 
+Carrying real WireGuard:
+  wg-server --listen ADDR --wg-forward HOST:PORT [--level LEVEL] [--seconds N]
+  wg-client --connect ADDR --wg-listen HOST:PORT [--floor LEVEL] [--seconds N]
+
+Common: [--psk STRING] [--out DIR]
 LEVEL is one of: light, moderate, heavy.
 
-  --floor              minimum the client will accept; below it, the connection is refused
-  --no-server-machines run a server that cannot shape return traffic, to show the refusal
-  --out                directory for trace CSVs (nanoseconds,direction,bytes)
+  --floor              minimum the client will accept; below it, it refuses to connect
+  --no-server-machines a server that cannot shape return traffic, to show the refusal
+  --wg-listen          where the local WireGuard client points its Endpoint
+  --wg-forward         where the server-side relay delivers decrypted WireGuard traffic
 
 TESTBED ONLY. Keys come from a pre-shared string; there is no authenticated
 key exchange. See src/main.rs.

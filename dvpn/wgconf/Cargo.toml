@@ -1,0 +1,17 @@
+[package]
+name = "dvpn-wgconf"
+description = "Generate ready-to-use WireGuard configurations for the DAITA VPN shaped transport"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "dvpn-wgconf"
+path = "src/main.rs"
+
+[dependencies]
+dvpn-wire.workspace = true
+x25519-dalek = { version = "3", features = ["static_secrets"] }
+getrandom = "0.3"
+base64 = "0.23"

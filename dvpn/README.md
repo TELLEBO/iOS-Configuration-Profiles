@@ -56,6 +56,21 @@ and a trained classifier. Size uniformity and occupancy are *necessary* conditio
 defense, not sufficient ones — a trace can be perfectly uniform in size and still leak
 through timing. No effectiveness claim should be made from the table above.
 
+## Using it with WireGuard
+
+[WIREGUARD.md](WIREGUARD.md) covers the generator and the relay. Short version: a stock
+WireGuard `.conf` has no field for padding machines and no hook to add one, so WireGuard is
+left unmodified and its datagrams are carried inside the shaped transport. `dvpn-wgconf`
+emits ready-to-use configs with real keys, DNSforge DNS and a computed MTU of 1152.
+
+```bash
+./target/release/dvpn-wgconf --server-endpoint vpn.example.com:5601 --clients 2 --dns base --out wg/
+```
+
+Works today on Linux and macOS, where the relay runs beside stock WireGuard. **Not** on iOS
+with the stock WireGuard app — iOS has no background relay process, so the shaping has to
+live inside the VPN app's own Network Extension.
+
 ## Reproducing it
 
 ```bash

@@ -9,6 +9,11 @@ DAITA because Mullvad's app never reads `providerConfiguration`. iOS delivers th
 dictionary either way — the app decides whether to look. Build the app, and the mechanism
 that was inert becomes the enforcement channel.
 
+Start with [ROADMAP.md](ROADMAP.md) for an honest assessment of where this stands against
+DAITA today — short version: TAD is a control plane with no data plane, and is not a
+competing defense until Phases 1–3 there are done. [BUILD.md](BUILD.md) is the build
+procedure, app and profile.
+
 Read [ARCHITECTURE.md](ARCHITECTURE.md) before building anything. Two constraints there
 decide whether this project is viable for you, and both are cheaper to learn now:
 
